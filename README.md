@@ -1,2 +1,4 @@
 # Pulse
-Gaming Diagnostics window showing crucial LIVE CPU/GPU/Ram specs
+Gaming Diagnostics window showing crucial LIVE CPU/GPU/Ram specs.
+
+Includes recordable sessions with downloadable reports that highlight over 2o key metrics.
