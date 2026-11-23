@@ -6,8 +6,8 @@ window briefly while it checks or installs the required package. It closes
 after Medic starts; the dashboard runs on its own. The launcher filename stays
 the same so existing shortcuts continue to work.
 
-Use the header's POLL ADJUSTER tiles to sample every 1, 5, or 10 seconds; the
-default is 1 second.
+Use the header's POLL ADJUSTER tiles to sample every 1, 3, 5, or 10 seconds; the
+default is 3 seconds.
 
 This dashboard reads NVIDIA GPU telemetry through nvidia-smi and CPU/RAM
 telemetry through psutil. CPU core temperatures come directly from Core Temp's
@@ -16,7 +16,8 @@ dashboard. Core temperatures are shown individually; the large CPU temperature
 is the hottest core reading.
 
 The dashboard shows GPU, CPU, RAM, and per-core temperatures, plus GPU/CPU
-load history with 5-minute, 30-minute, 1-hour, and full-session ranges.
+load history with 5-minute, 30-minute, 1-hour, and full-session ranges. Use the
+HISTORY ON/OFF button to stop or resume history sampling and chart updates.
 Temperature and GPU-load readings change color by range. GPU fan speed is shown
 as a percent.
 The CPU card shows an estimated system draw: measured GPU board power, an

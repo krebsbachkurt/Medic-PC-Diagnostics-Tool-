@@ -238,8 +238,8 @@ def read_cpu_name():
 
 class App:
     def __init__(self,root):
-        self.root=root; self.recording_active=False; self.record_samples=[]; self.record_started_at=None; self.record_wall_start=None; root.title("Medic | Live Hardware Monitor"); root.geometry("960x700"); root.minsize(850,640); root.configure(bg=BG)
-        self.running=True; self.started_at=time.monotonic(); self.poll_interval=1; self.poll_changed=threading.Event(); self.poll_buttons={}; self.cpu_model=read_cpu_name(); self.psu_watts=750; self.data={}; self.samples=deque(); self.lock=threading.Lock(); self.core_labels={}; self.core_accents={}; self.core_wait_label=None; self.history_mode="both"; self.history_buttons={}; self.history_range="5m"; self.history_range_buttons={}
+        self.root=root; self.recording_active=False; self.record_samples=[]; self.record_started_at=None; self.record_wall_start=None; root.title("Medic | Live Hardware Monitor"); root.geometry("960x700"); root.minsize(850,400); root.configure(bg=BG)
+        self.running=True; self.started_at=time.monotonic(); self.poll_interval=3; self.poll_changed=threading.Event(); self.poll_buttons={}; self.cpu_model=read_cpu_name(); self.psu_watts=750; self.data={}; self.samples=deque(); self.lock=threading.Lock(); self.core_labels={}; self.core_accents={}; self.core_wait_label=None; self.history_enabled=False; self.history_mode="both"; self.history_buttons={}; self.history_range="5m"; self.history_range_buttons={}
         self.core_reader=CoreTempReader()
         if psutil:psutil.cpu_percent(interval=None)
         self.build(); root.protocol("WM_DELETE_WINDOW",self.close)
@@ -247,7 +247,7 @@ class App:
     def card(self,parent,title,color):
         f=tk.Frame(parent,bg=PANEL,highlightthickness=0,padx=14,pady=11)
         tk.Frame(f,bg=color,height=2).pack(fill="x",pady=(0,9))
-        tk.Label(f,text=title,bg=PANEL,fg=color,font=("Segoe UI",8,"bold")).pack(anchor="w")
+        tk.Label(f,text=title,bg=PANEL,fg=color,font=("Segoe UI",9,"bold")).pack(anchor="w")
         tk.Frame(f,bg="#1d2b42",height=1).pack(fill="x",pady=(7,0))
         return f
     def metric_pair(self,parent,left_title,left_color,right_title,right_color):
@@ -255,15 +255,15 @@ class App:
         a=tk.Frame(row,bg=PANEL); a.pack(side="left",fill="x",expand=True)
         tk.Frame(row,bg=EDGE,width=1).pack(side="left",fill="y",pady=6)
         b=tk.Frame(row,bg=PANEL); b.pack(side="left",fill="x",expand=True,padx=(10,0))
-        tk.Label(a,text=left_title,bg=PANEL,fg=MUTED,font=("Segoe UI",8,"bold")).pack(anchor="w")
-        tk.Label(b,text=right_title,bg=PANEL,fg=MUTED,font=("Segoe UI",8,"bold")).pack(anchor="w")
-        va=tk.Label(a,text="—",bg=PANEL,fg=left_color,font=("Bahnschrift",25,"bold")); va.pack(anchor="w")
-        vb=tk.Label(b,text="—",bg=PANEL,fg=right_color,font=("Bahnschrift",25,"bold")); vb.pack(anchor="w")
+        tk.Label(a,text=left_title,bg=PANEL,fg=MUTED,font=("Segoe UI",10,"bold")).pack(anchor="w")
+        tk.Label(b,text=right_title,bg=PANEL,fg=MUTED,font=("Segoe UI",10,"bold")).pack(anchor="w")
+        va=tk.Label(a,text="—",bg=PANEL,fg=left_color,font=("Bahnschrift",26,"bold")); va.pack(anchor="w")
+        vb=tk.Label(b,text="—",bg=PANEL,fg=right_color,font=("Bahnschrift",26,"bold")); vb.pack(anchor="w")
         return va,vb
     def line(self,parent,title):
         r=tk.Frame(parent,bg=PANEL); r.pack(fill="x",pady=2)
-        tk.Label(r,text=title,bg=PANEL,fg=MUTED,font=("Segoe UI",9)).pack(side="left",pady=3)
-        v=tk.Label(r,text="—",bg=PANEL,fg=FG,font=("Bahnschrift",9,"bold"),anchor="e",justify="right",wraplength=210); v.pack(side="right",pady=3)
+        tk.Label(r,text=title,bg=PANEL,fg=MUTED,font=("Segoe UI",11)).pack(side="left",pady=3)
+        v=tk.Label(r,text="—",bg=PANEL,fg=FG,font=("Bahnschrift",11,"bold"),anchor="e",justify="right",wraplength=210); v.pack(side="right",pady=3)
         tk.Frame(r,bg="#1b2a40",height=1).pack(side="bottom",fill="x")
         return v
     def build(self):
@@ -273,28 +273,28 @@ class App:
         mark.create_line(1,13,7,13,10,8,13,18,17,3,20,13,32,13,fill=CYAN,width=2,smooth=True,capstyle="round",joinstyle="round")
         brand_text=tk.Frame(brand,bg=BG); brand_text.pack(side="left")
         name_row=tk.Frame(brand_text,bg=BG); name_row.pack(anchor="w")
-        tk.Label(name_row,text="Medic",bg=BG,fg=FG,font=("Segoe UI",18,"bold")).pack(side="left")
-        tk.Label(name_row,text="+",bg=BG,fg="#ff5c68",font=("Segoe UI",25,"bold")).pack(side="left",padx=(2,0),pady=(0,1))
+        tk.Label(name_row,text="Medic",bg=BG,fg=FG,font=("Segoe UI",19,"bold")).pack(side="left")
+        tk.Label(name_row,text="+",bg=BG,fg="#ff5c68",font=("Segoe UI",26,"bold")).pack(side="left",padx=(2,0),pady=(0,1))
         poll_row=tk.Frame(brand_text,bg=BG); poll_row.pack(anchor="w",pady=(1,0))
-        tk.Label(poll_row,text="POLL ADJUSTER",bg=BG,fg=MUTED,font=("Segoe UI",7,"bold")).pack(side="left",padx=(0,7))
-        for seconds,label in ((1,"1 SEC"),(5,"5 SEC"),(10,"10 SEC")):
-            button=tk.Button(poll_row,text=label,bg="#223b45" if seconds==self.poll_interval else PANEL,fg=CYAN if seconds==self.poll_interval else MUTED,activebackground="#223b45",activeforeground=CYAN,relief="solid",bd=1,highlightthickness=0,cursor="hand2",font=("Segoe UI",7,"bold"),padx=6,pady=2,command=lambda value=seconds:self.set_poll_interval(value))
+        tk.Label(poll_row,text="POLL ADJUSTER",bg=BG,fg=MUTED,font=("Segoe UI",8,"bold")).pack(side="left",padx=(0,7))
+        for seconds,label in ((1,"1 SEC"),(3,"3 SEC"),(5,"5 SEC"),(10,"10 SEC")):
+            button=tk.Button(poll_row,text=label,bg="#223b45" if seconds==self.poll_interval else PANEL,fg=CYAN if seconds==self.poll_interval else MUTED,activebackground="#223b45",activeforeground=CYAN,relief="solid",bd=1,highlightthickness=0,cursor="hand2",font=("Segoe UI",9,"bold"),padx=6,pady=2,command=lambda value=seconds:self.set_poll_interval(value))
             button.pack(side="left",padx=(0,4)); self.poll_buttons[seconds]=button
-        self.session_clock=tk.Label(h,text="00:00:00",bg=PANEL,fg=FG,font=("Bahnschrift",9,"bold"),padx=9,pady=5); self.session_clock.pack(side="right",padx=(10,0),pady=(4,0))
-        self.status=tk.Label(h,text="● CONNECTING",bg="#2a2419",fg=AMBER,font=("Segoe UI",8,"bold"),padx=9,pady=5); self.status.pack(side="right",pady=(4,0))
+        self.session_clock=tk.Label(h,text="00:00:00",bg=PANEL,fg=FG,font=("Bahnschrift",10,"bold"),padx=9,pady=5); self.session_clock.pack(side="right",padx=(10,0),pady=(4,0))
+        self.status=tk.Label(h,text="● CONNECTING",bg="#2a2419",fg=AMBER,font=("Segoe UI",9,"bold"),padx=9,pady=5); self.status.pack(side="right",pady=(4,0))
         self.speedtest_image=tk.PhotoImage(file=os.path.join(os.path.dirname(os.path.abspath(__file__)),"speedtest_button_cutout.png"))
         self.speedtest_button=tk.Button(h,image=self.speedtest_image,bg=BG,activebackground=BG,relief="flat",bd=0,highlightthickness=0,cursor="hand2",command=lambda:webbrowser.open("https://www.speedtest.net/"))
         self.speedtest_button.pack(side="right",padx=(0,14),pady=(4,0))
-        self.record_button=tk.Button(h,text="RECORD",bg=PANEL,fg=CYAN,activebackground="#23314b",activeforeground=FG,relief="solid",bd=1,highlightthickness=1,highlightbackground=EDGE,cursor="hand2",font=("Segoe UI",8,"bold"),padx=9,pady=5,command=self.start_recording)
+        self.record_button=tk.Button(h,text="RECORD",bg=PANEL,fg=CYAN,activebackground="#23314b",activeforeground=FG,relief="solid",bd=1,highlightthickness=1,highlightbackground=EDGE,cursor="hand2",font=("Segoe UI",10,"bold"),padx=9,pady=5,command=self.start_recording)
         self.record_button.pack(side="right",padx=(0,8),pady=(4,0))
         cards=tk.Frame(self.root,bg=BG); cards.pack(fill="x",padx=17)
         self.gpu=self.card(cards,"GRAPHICS PROCESSOR",BLUE); self.cpu=self.card(cards,"CENTRAL PROCESSOR",CYAN); self.ram=self.card(cards,"SYSTEM MEMORY",AMBER)
         for f in (self.gpu,self.cpu,self.ram):f.pack(side="left",fill="both",expand=True,padx=5)
-        self.gpu_header=tk.Label(self.gpu,text="NVIDIA GPU",bg=PANEL,fg="#76b900",font=("Segoe UI",11,"bold"),anchor="w",justify="left",wraplength=210)
+        self.gpu_header=tk.Label(self.gpu,text="NVIDIA GPU",bg=PANEL,fg="#76b900",font=("Segoe UI",12,"bold"),anchor="w",justify="left",wraplength=210)
         self.gpu_header.pack(anchor="w",pady=(5,0))
-        self.cpu_header=tk.Label(self.cpu,text=self.cpu_model,bg=PANEL,fg="#0071c5",font=("Segoe UI",11,"bold"),anchor="w",justify="left",wraplength=210)
+        self.cpu_header=tk.Label(self.cpu,text=self.cpu_model,bg=PANEL,fg="#0071c5",font=("Segoe UI",12,"bold"),anchor="w",justify="left",wraplength=210)
         self.cpu_header.pack(anchor="w",pady=(5,0))
-        self.ram_header=tk.Label(self.ram,text="POWER X  ·  16 GB × 2",bg=PANEL,fg=AMBER,font=("Segoe UI",11,"bold"),anchor="w",justify="left",wraplength=210)
+        self.ram_header=tk.Label(self.ram,text="POWER X  ·  16 GB × 2",bg=PANEL,fg=AMBER,font=("Segoe UI",12,"bold"),anchor="w",justify="left",wraplength=210)
         self.ram_header.pack(anchor="w",pady=(5,0))
         self.gpu_use,self.gpu_temp=self.metric_pair(self.gpu,"GPU LOAD",BLUE,"GPU TEMP",AMBER)
         self.cpu_use,self.cpu_temp=self.metric_pair(self.cpu,"CPU LOAD",CYAN,"CPU TEMP",AMBER)
@@ -305,27 +305,42 @@ class App:
         self.ram_avail=self.line(self.ram,"Available"); self.ram_total=self.line(self.ram,"Total")
         core_panel=tk.Frame(self.root,bg=PANEL,highlightthickness=0); core_panel.pack(fill="x",padx=22,pady=(12,8))
         head=tk.Frame(core_panel,bg=PANEL); head.pack(fill="x",padx=15,pady=(10,2))
-        tk.Label(head,text="CPU Core Temperatures",bg=PANEL,fg=FG,font=("Segoe UI",10,"bold")).pack(side="left")
-        tk.Label(head,text="Live readings from Core Temp 1.18",bg=PANEL,fg=MUTED,font=("Segoe UI",9)).pack(side="right")
+        tk.Label(head,text="CPU Core Temperatures",bg=PANEL,fg=FG,font=("Segoe UI",11,"bold")).pack(side="left")
+        tk.Label(head,text="Live readings from Core Temp 1.18",bg=PANEL,fg=MUTED,font=("Segoe UI",10)).pack(side="right")
         tk.Frame(core_panel,bg=CYAN,height=2).pack(fill="x")
         self.cores_frame=tk.Frame(core_panel,bg=PANEL); self.cores_frame.pack(fill="x",padx=12,pady=(3,9))
-        chart=tk.Frame(self.root,bg=PANEL,highlightthickness=0); chart.pack(fill="both",expand=True,padx=22,pady=(0,7))
+        chart=tk.Frame(self.root,bg=PANEL,highlightthickness=0); self.chart=chart; chart.pack(fill="both" if self.history_enabled else "x",expand=self.history_enabled,padx=22,pady=(0,7))
         tk.Frame(chart,bg="#425a7a",height=2).pack(fill="x")
         head=tk.Frame(chart,bg=PANEL); head.pack(fill="x",padx=16,pady=(8,0))
-        tk.Label(head,text="LOAD HISTORY",bg=PANEL,fg=FG,font=("Segoe UI",9,"bold")).pack(side="left")
+        tk.Label(head,text="LOAD HISTORY",bg=PANEL,fg=FG,font=("Segoe UI",10,"bold")).pack(side="left")
+        self.history_toggle=tk.Button(head,text="HISTORY OFF",bg=PANEL,fg=MUTED,activebackground="#23314b",activeforeground=FG,relief="solid",bd=1,highlightthickness=0,cursor="hand2",font=("Segoe UI",9,"bold"),padx=6,pady=2,command=self.toggle_history)
+        self.history_toggle.pack(side="right",padx=(4,0))
         ranges=tk.Frame(head,bg=PANEL); ranges.pack(side="right")
         for key,label in (("5m","5 MIN"),("30m","30 MIN"),("1h","1 HOUR"),("session","SESSION")):
-            button=tk.Button(ranges,text=label,bg="#23314b" if key==self.history_range else PANEL,fg=FG if key==self.history_range else MUTED,activebackground="#23314b",activeforeground=FG,relief="solid",bd=1,highlightthickness=0,cursor="hand2",font=("Segoe UI",7,"bold"),padx=6,pady=2,command=lambda value=key:self.set_history_range(value))
+            button=tk.Button(ranges,text=label,bg="#23314b" if key==self.history_range else PANEL,fg=FG if key==self.history_range else MUTED,activebackground="#23314b",activeforeground=FG,relief="solid",bd=1,highlightthickness=0,cursor="hand2",font=("Segoe UI",9,"bold"),padx=6,pady=2,command=lambda value=key:self.set_history_range(value))
             button.pack(side="left",padx=(4,0)); self.history_range_buttons[key]=button
         filters=tk.Frame(head,bg=PANEL); filters.pack(side="right",padx=(0,8))
         for mode,label,color in (("both","BOTH",FG),("gpu","GPU",BLUE),("cpu","CPU",CYAN)):
-            button=tk.Button(filters,text=label,bg="#23314b" if mode==self.history_mode else PANEL,fg=color if mode==self.history_mode else MUTED,activebackground="#23314b",activeforeground=color,relief="solid",bd=1,highlightthickness=0,cursor="hand2",font=("Segoe UI",7,"bold"),padx=7,pady=2,command=lambda value=mode:self.set_history_mode(value))
+            button=tk.Button(filters,text=label,bg="#23314b" if mode==self.history_mode else PANEL,fg=color if mode==self.history_mode else MUTED,activebackground="#23314b",activeforeground=color,relief="solid",bd=1,highlightthickness=0,cursor="hand2",font=("Segoe UI",9,"bold"),padx=7,pady=2,command=lambda value=mode:self.set_history_mode(value))
             button.pack(side="left",padx=(4,0)); self.history_buttons[mode]=button
-        self.plot=tk.Canvas(chart,bg=PANEL,highlightthickness=0,height=126); self.plot.pack(fill="both",expand=True,padx=10,pady=(1,5))
+        self.plot=tk.Canvas(chart,bg=PANEL,highlightthickness=0,height=126)
+        if self.history_enabled:self.plot.pack(fill="both",expand=True,padx=10,pady=(1,5))
         footer=tk.Frame(self.root,bg=BG); footer.pack(fill="x",padx=24,pady=(0,7))
         tk.Frame(footer,bg=CYAN,width=3,height=13).pack(side="left",padx=(0,8))
-        self.core_feed_status=tk.Label(footer,text="CPU SENSOR  /  WAITING FOR CORE TEMP",bg=BG,fg=MUTED,font=("Segoe UI",8,"bold")); self.core_feed_status.pack(side="left")
-        tk.Label(footer,text="MEDIC  ·  LOCAL MONITOR",bg=BG,fg="#58677f",font=("Segoe UI",7,"bold")).pack(side="right")
+        self.core_feed_status=tk.Label(footer,text="CPU SENSOR  /  WAITING FOR CORE TEMP",bg=BG,fg=MUTED,font=("Segoe UI",9,"bold")); self.core_feed_status.pack(side="left")
+        tk.Label(footer,text="MEDIC  ·  LOCAL MONITOR",bg=BG,fg="#58677f",font=("Segoe UI",8,"bold")).pack(side="right")
+        self.root.update_idletasks(); self.full_window_geometry=self.root.geometry()
+        if not self.history_enabled:self.root.geometry(f"{self.root.winfo_width()}x{self.root.winfo_reqheight()}")
+    def toggle_history(self):
+        self.history_enabled=not self.history_enabled
+        if self.history_enabled:
+            self.chart.pack_forget(); self.chart.pack(fill="both",expand=True,padx=22,pady=(0,7))
+            self.plot.pack(fill="both",expand=True,padx=10,pady=(1,5)); self.history_toggle.config(text="HISTORY ON",fg=CYAN)
+            self.root.geometry(self.full_window_geometry)
+        else:
+            self.plot.delete("all"); self.plot.pack_forget(); self.chart.pack_forget(); self.chart.pack(fill="x",expand=False,padx=22,pady=(0,7)); self.history_toggle.config(text="HISTORY OFF",fg=MUTED)
+            self.root.update_idletasks()
+            self.root.geometry(f"{self.root.winfo_width()}x{self.root.winfo_reqheight()}")
     def poll(self):
         while self.running:
             self.poll_changed.clear()
@@ -338,7 +353,8 @@ class App:
             d["cpu_freq"]=self.core_reader.last_cpu_mhz or read_live_cpu_mhz()
             elapsed=time.monotonic()-self.started_at
             with self.lock:
-                self.data=d; self.samples.append((elapsed,d.get("gpu"),d.get("cpu")))
+                self.data=d
+                if self.history_enabled:self.samples.append((elapsed,d.get("gpu"),d.get("cpu")))
                 if self.recording_active:
                     record_elapsed=time.monotonic()-self.record_started_at
                     self.record_samples.append(self.make_record_sample(d,record_elapsed))
@@ -376,11 +392,11 @@ class App:
         self.record_button.config(text="EXPORTING…",state="disabled")
         report,concerns=build_record_report(samples,duration,self.record_wall_start)
         popup=tk.Toplevel(self.root); popup.title("Medic · Exporting PDF"); popup.configure(bg=BG); popup.geometry("520x410"); popup.minsize(460,360); popup.transient(self.root)
-        tk.Label(popup,text="SESSION REPORT",bg=BG,fg=FG,font=("Segoe UI",12,"bold")).pack(anchor="w",padx=18,pady=(16,2))
-        status=tk.Label(popup,text="Preparing your PDF report…",bg=BG,fg=CYAN,font=("Segoe UI",9,"bold")); status.pack(anchor="w",padx=18,pady=(0,8))
-        tk.Label(popup,text="AREAS OF CONCERN  /  DARK RED = 80°C+",bg=PANEL,fg=RED,font=("Segoe UI",8,"bold"),anchor="w",padx=10,pady=7).pack(fill="x",padx=14)
+        tk.Label(popup,text="SESSION REPORT",bg=BG,fg=FG,font=("Segoe UI",13,"bold")).pack(anchor="w",padx=18,pady=(16,2))
+        status=tk.Label(popup,text="Preparing your PDF report…",bg=BG,fg=CYAN,font=("Segoe UI",10,"bold")); status.pack(anchor="w",padx=18,pady=(0,8))
+        tk.Label(popup,text="AREAS OF CONCERN  /  DARK RED = 80°C+",bg=PANEL,fg=RED,font=("Segoe UI",9,"bold"),anchor="w",padx=10,pady=7).pack(fill="x",padx=14)
         body=tk.Frame(popup,bg=PANEL); body.pack(fill="both",expand=True,padx=14,pady=(0,9))
-        concerns_text=tk.Text(body,bg=PANEL,fg=FG,insertbackground=FG,relief="flat",wrap="word",font=("Segoe UI",9),height=9,padx=9,pady=8)
+        concerns_text=tk.Text(body,bg=PANEL,fg=FG,insertbackground=FG,relief="flat",wrap="word",font=("Segoe UI",10),height=9,padx=9,pady=8)
         scrollbar=tk.Scrollbar(body,command=concerns_text.yview); concerns_text.configure(yscrollcommand=scrollbar.set)
         concerns_text.pack(side="left",fill="both",expand=True); scrollbar.pack(side="right",fill="y")
         if concerns:
@@ -441,7 +457,7 @@ class App:
             if self.core_wait_label is None:
                 for child in self.cores_frame.winfo_children():child.destroy()
                 self.core_labels.clear(); self.core_accents.clear()
-                self.core_wait_label=tk.Label(self.cores_frame,text="NO CPU SENSOR FEED  /  START CORE TEMP",bg=PANEL,fg=MUTED,font=("Bahnschrift",9,"bold"))
+                self.core_wait_label=tk.Label(self.cores_frame,text="NO CPU SENSOR FEED  /  START CORE TEMP",bg=PANEL,fg=MUTED,font=("Bahnschrift",10,"bold"))
                 self.core_wait_label.grid(row=0,column=0,sticky="w",padx=5,pady=8)
             return
         if self.core_wait_label is not None:
@@ -457,15 +473,15 @@ class App:
                 self.cores_frame.grid_columnconfigure(col,weight=1)
                 accent=tk.Frame(tile,bg=AMBER,width=3); accent.pack(side="left",fill="y",padx=(0,8))
                 body=tk.Frame(tile,bg="#15243a"); body.pack(side="left",fill="x",expand=True)
-                tk.Label(body,text=f"CORE {i+1:02}",bg="#15243a",fg=MUTED,font=("Segoe UI",7,"bold")).pack(anchor="w")
-                value=tk.Label(body,text="— °C",bg="#15243a",fg=AMBER,font=("Bahnschrift",16,"bold")); value.pack(anchor="w")
+                tk.Label(body,text=f"CORE {i+1:02}",bg="#15243a",fg=MUTED,font=("Segoe UI",9,"bold")).pack(anchor="w")
+                value=tk.Label(body,text="— °C",bg="#15243a",fg=AMBER,font=("Bahnschrift",18,"bold")); value.pack(anchor="w")
                 self.core_labels[i]=value
                 self.core_accents[i]=accent
         for i,t in temps:
             if i in self.core_labels:
                 color=temp_color(t); self.core_labels[i].config(text=f"{t:.0f} °C",fg=color); self.core_accents[i].config(bg=color)
     def refresh(self):
-        with self.lock:d=self.data.copy(); hist=list(self.samples)
+        with self.lock:d=self.data.copy(); hist=list(self.samples) if self.history_enabled else []
         if d:
             live="error" not in d
             if self.recording_active:
@@ -488,7 +504,8 @@ class App:
             self.power_estimate.config(text=f"{estimate:.0f} W / {self.psu_watts} W" if estimate is not None else f"— / {self.psu_watts} W")
             elapsed=int(time.monotonic()-self.started_at); hours,rem=divmod(elapsed,3600); minutes,seconds=divmod(rem,60)
             self.session_clock.config(text=f"{hours:02}:{minutes:02}:{seconds:02}")
-            self.update_core_tiles(ct); self.draw(hist)
+            self.update_core_tiles(ct)
+            if self.history_enabled:self.draw(hist)
         if self.running:self.root.after(350,self.refresh)
     def set_history_mode(self,mode):
         self.history_mode=mode
@@ -504,9 +521,10 @@ class App:
         with self.lock:hist=list(self.samples)
         self.draw(hist)
     def draw(self,hist):
+        if not self.history_enabled:return
         c=self.plot;c.delete("all");w=max(c.winfo_width(),200);h=max(c.winfo_height(),80);l=36;r=w-15;t=15;b=h-18
         for p in (0,50,100):
-            y=b-(b-t)*p/100;c.create_line(l,y,r,y,fill="#263550");c.create_text(l-7,y,text=str(p),fill=MUTED,anchor="e",font=("Segoe UI",7))
+            y=b-(b-t)*p/100;c.create_line(l,y,r,y,fill="#263550");c.create_text(l-7,y,text=str(p),fill=MUTED,anchor="e",font=("Segoe UI",8))
         spans={"5m":300,"30m":1800,"1h":3600}
         span=spans.get(self.history_range)
         latest=hist[-1][0] if hist else 0
@@ -529,7 +547,7 @@ class App:
                 c.create_line(*pts,fill=color,width=2,smooth=len(hist)<250)
                 px,py=pts[-2:]; c.create_oval(px-3,py-3,px+3,py+3,fill=color,outline=PANEL,width=2)
         for n,(_,color,label) in enumerate(series):
-            c.create_text(r-38*(len(series)-n),t-4,text=label,fill=color,font=("Segoe UI",8,"bold"))
+            c.create_text(r-38*(len(series)-n),t-4,text=label,fill=color,font=("Segoe UI",9,"bold"))
     def close(self):
         self.running=False;self.poll_changed.set();self.core_reader.close();self.root.destroy()
 
